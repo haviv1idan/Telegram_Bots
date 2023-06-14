@@ -1,0 +1,7 @@
+/.idea
+Grocery_Bot/src/__pycache__
+
+Grocery_Bot/geckodriver.log
+Grocery_Bot/additional_files/products_details.json
+Grocery_Bot/additional_files/products.txt
+Grocery_Bot/additional_files/config.json

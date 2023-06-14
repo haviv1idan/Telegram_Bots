@@ -54,7 +54,7 @@ def print_table(table):
 
 def get_products_id_from_file():
     try:
-        with open("products.txt", 'r') as file:
+        with open(PRODUCTS_FILE, 'r') as file:
             products = file.readlines()
         return products
     except FileNotFoundError as e:

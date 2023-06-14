@@ -1,6 +1,7 @@
 import telebot
 
-BOT_TOKEN = "6233364747:AAHPZ7PLineWKJcp4v0xx1dEpvvNyzlnqFc"
+from Grocery_Bot.src.constants import BOT_TOKEN
+
 bot = telebot.TeleBot(BOT_TOKEN)
 
 

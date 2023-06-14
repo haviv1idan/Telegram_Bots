@@ -25,7 +25,6 @@ class WebPage:
     """
 
     def __init__(self, browser, url: str):
-
         self.browser = browser
         self.url: str = url
 

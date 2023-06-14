@@ -13,8 +13,3 @@ def send_welcome(message):
 @bot.message_handler(func=lambda msg: True)
 def send_welcome(message):
     bot.send_message(message, message.text)
-
-
-@bot.message_handler(commands=["get product"])
-def send_product_details(message):
-    pass

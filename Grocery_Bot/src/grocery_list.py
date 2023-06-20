@@ -1,3 +1,16 @@
+"""
+Selenium run Firefox without open browser
+    from selenium import webdriver
+    from selenium.webdriver.firefox.options import Options
+
+    options = Options()
+    options.add_argument("--headless")
+    driver = webdriver.Firefox(options=options)
+    driver.get('https://www.google.com/')
+
+Selenium run Chrome with open browser
+
+"""
 # def write_to_csv(table, parsed_data: list[dict[str, str]]):
 #     with open(FILENAME, 'a') as f:
 #         writer = csv.DictWriter(f, fieldnames=table.headers)

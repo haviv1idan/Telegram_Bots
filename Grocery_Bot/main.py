@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 # Initializing bot and dispatcher
 bot: Bot = Bot(token=BOT_TOKEN)
 dp: Dispatcher = Dispatcher(bot)
-shopping_area = "כביש חולון בת ים, ראשון לציון"
+shopping_area = "ראשון לציון"
 
 
 def get_driver():
@@ -54,6 +54,7 @@ def filter_table_content(table, product) -> Product | None:
 
     table_json = {}
     for row_index, tr in enumerate(body_content):
+
         row_content = {}
         for td_index, td in enumerate(tr.find_all("td")):
 

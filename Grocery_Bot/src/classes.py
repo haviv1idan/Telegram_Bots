@@ -62,8 +62,8 @@ class WebPage:
     """
 
     def __init__(self, url: str):
-        self.options = Options()
-        self.options.add_argument("--headless")
+        # self.options = Options()
+        # self.options.add_argument("--headless")
         self.browser = webdriver.Firefox()
         self.url: str = url
         self.browser.get(self.url)

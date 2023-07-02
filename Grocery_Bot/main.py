@@ -102,7 +102,7 @@ def filter_table_content(table, product) -> Product | None:
     if not th:
         raise SeleniumKeyMissingException('Expected to find th key in tr')
 
-    headers: list[str] = [th.text for th in tr]
+    headers: list[str] = [th.text for th in tr if type(th) == bs4.element.Tag]
     logger.info(f"got headers: {headers}")
 
     # Table Body
@@ -121,7 +121,7 @@ def filter_table_content(table, product) -> Product | None:
     for row_index, tr in enumerate(body_content):
 
         row_content = {}
-        td_list = tr.findall('td')
+        td_list = tr.find_all('td')
         if not td_list:
             continue
 

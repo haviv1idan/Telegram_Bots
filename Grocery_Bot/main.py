@@ -12,6 +12,12 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.firefox.options import Options
 
 
+SHOP_HEADERS_LENGTH = 6
+ONLINE_HEADERS_LENGTH = 5
+EMPTY_SALE_VALUE = ' '
+HEBREW_SALE_VALUE = 'מבצע'
+
+
 class SeleniumKeyMissingException(Exception):
     pass
 
@@ -104,6 +110,12 @@ def filter_table_content(table, product) -> Product | None:
 
     headers: list[str] = [th.text for th in tr if type(th) == bs4.element.Tag]
     logger.info(f"got headers: {headers}")
+    if len(headers) == SHOP_HEADERS_LENGTH:
+        product.shops.keys = headers
+        table_type = 'shops'
+    else:
+        product.online_shops.keys = headers
+        table_type = 'online_shops'
 
     # Table Body
     t_body = table.find('tbody')
@@ -117,7 +129,6 @@ def filter_table_content(table, product) -> Product | None:
     body_content = [tr for tr in tr_list if "display_when_narrow" not in tr.attrs.get("class", "")]
     logger.info(f"got body: {body_content}")
 
-    table_json = {}
     for row_index, tr in enumerate(body_content):
 
         row_content = {}
@@ -127,19 +138,21 @@ def filter_table_content(table, product) -> Product | None:
 
         for td_index, td in enumerate(td_list):
 
-            if headers[td_index] != "מבצע":
+            if headers[td_index] != HEBREW_SALE_VALUE:
                 row_content[headers[td_index]] = td.text
                 continue
 
             try:
                 if td.next.get("type") == "button":
-                    row_content[headers[td_index]] = td.next["data-discount-desc"]
+                    row_content[headers[td_index]] = td.next.get("data-discount-desc").replace("<BR>", " ")
             except AttributeError:
-                row_content[headers[td_index]] = td.text
+                row_content[headers[td_index]] = td.text if td.text != EMPTY_SALE_VALUE else ''
 
-        table_json[row_index] = row_content
+        if table_type == 'shops':
+            product.shops.values = row_content
+        else:
+            product.online_shops.values = row_content
 
-    setattr(product, "{}shops".format("online_" if len(headers) == 5 else ""), table_json)
     return product
 
 
@@ -173,7 +186,7 @@ async def send_welcome(message: types.Message):
     await message.reply("Hi!\nI'm EchoBot!\nPowered by aiogram.")
 
 
-@dp.message_handler(commands=['get_product_details'])
+@dp.message_handler(commands=['product'])
 async def product_details(message: types.Message):
     # get product id
     product_id: str = message.text.split(' ')[1]
@@ -186,11 +199,15 @@ async def product_details(message: types.Message):
     send_filters(driver, By.NAME, "product_name_or_barcode", product_id)
     driver.find_element(By.ID, "get_compare_results_button").click()
 
-    # get product details and parse
-    product: Product = get_product_details(driver, product_id)
-    driver.quit()
-
-    await message.reply(product.print_product_details())
+    try:
+        # get product details and parse
+        product: Product = get_product_details(driver, product_id)
+        driver.quit()
+        await message.reply(product.print_product_details())
+    except (Exception, ) as e:
+        driver.quit()
+        logger.error(e)
+        await message.reply(f"got exception: {e}")
 
 
 @dp.message_handler()

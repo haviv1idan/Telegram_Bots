@@ -1,17 +1,47 @@
 import logging
+import bs4
 import os
 import json
 import time
+import sqlite3
+import pandas as pd
+
 from typing import Any
-
-import bs4
-
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 
 logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+
+class Sqlite:
+
+    def __init__(self, db_name):
+        self.db = db_name
+        self.conn = sqlite3.connect(self.db)
+        self.cursor = self.conn.cursor()
+
+    def create_table(self, table_name, keys):
+        # Create a table with the specified keys
+        create_table_query = f'''
+            CREATE TABLE IF NOT EXISTS {table_name} (
+                {", ".join(keys)}
+            );
+        '''
+        self.conn.execute(create_table_query)
+
+    def insert_data_to_table(self, table_name, data):
+        # Insert data into the specified table
+        insert_query = f'''
+            INSERT INTO {table_name} VALUES ({", ".join(["?"] * len(data))})
+        '''
+        self.conn.execute(insert_query, data)
+        self.conn.commit()
+
+    def read_table(self, table_name):
+        logger.info(pd.read_sql_query(F"SELECT * FROM {table_name}", self.conn))
 
 
 class Config:
@@ -27,6 +57,35 @@ class Config:
         return "config_details: %s" % json.dumps(self.__dict__, indent=4)
 
 
+class Table:
+
+    def __init__(self, name, keys=None, values=None):
+        self.name: str = name
+        self.keys: list[str] | None = keys
+        self._values: list[dict[str, Any]] | None = values
+
+    @property
+    def values(self):
+        return self._values
+
+    @values.setter
+    def values(self, data: dict[str, Any]):
+        if not self._values:
+            self._values = [data]
+        else:
+            self._values.append(data)
+
+    def print_values(self):
+        for value in self._values:
+            print(value)
+
+    def __str__(self):
+        return f"Table: {self.name}\n" \
+               f"Keys: {self.keys}\n" \
+               f"values:\n" \
+               f"{self.print_values()}"
+
+
 class Product:
     """
     This class represent product object
@@ -34,15 +93,16 @@ class Product:
     def __init__(self, product_id):
         self.id: str = product_id
         self.name: str = ""
-        self.shops: dict[str, Any] | None = None
-        self.online_shops: dict[str, Any] | None = None
+        self.shops = Table('shops')
+        self.online_shops = Table('online_shops')
 
     def __str__(self):
         return {"name": self.name, "id": self.id, "shops": self.shops, "online_shops": self.online_shops}
 
     def _shops_to_string(self, online=False) -> str:
         shops_str = ""
-        for i, shop in getattr(self, f"{'online_' if online else ''}shops").items():
+        shop_values = getattr(self, f"{'online_' if online else ''}shops").values
+        for i, shop in enumerate(shop_values):
             shops_str += f"shop index: {i}\n"
             for key, value in shop.items():
                 shops_str += f"\t{key}: {value}\n"
@@ -61,12 +121,24 @@ class WebPage:
     This class represent web page object per product
     """
 
-    def __init__(self, url: str):
-        # self.options = Options()
-        # self.options.add_argument("--headless")
-        self.browser = webdriver.Firefox()
+    def __init__(self, url: str, headless: bool = False):
+        self.headless = headless
+        self._options = Options()
+        self.browser = webdriver.Firefox(options=self._options)
         self.url: str = url
         self.browser.get(self.url)
+
+    @property
+    def headless(self):
+        logger.info("Getting headless")
+        return self.headless
+
+    @headless.setter
+    def headless(self, headless):
+        if headless:
+            logger.info('Adding --headless argument to options')
+            self._options.add_argument('--headless')
+            self.browser = webdriver.Firefox(options=self._options)
 
     def fill_product_filter_field(self, field_type: str, field_name: str, value: str):
         # Fill the searching field
@@ -182,11 +254,11 @@ class Products:
                              f"product details:\n{self.products[product_id].__str__()}")
         try:
             json_products = {p_id: v.__str__() for p_id, v in self.products.items()}
-            print(f"products: {json.dumps(json_products)}")
+            logger.info(f"products: {json.dumps(json_products)}")
 
             self.write_products_to_file()
         except Exception as e:
-            print(e)
+            logger.info(e)
             pass
 
         web_page.browser.quit()

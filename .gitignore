@@ -2,12 +2,12 @@ venv
 /.idea
 
 # pycache
-Grocery_Bot/__pycache__
-Grocery_Bot/src/__pycache__
+*__pycache__*
 
 # files
-Grocery_Bot/additional_files/products_details.json
-Grocery_Bot/additional_files/products.txt
-Grocery_Bot/additional_files/config.json
+Grocery_Bot/additional_files/*
 
-geckodriver.log
+# extensions files
+*.log*
+*.db*
+*.yml*

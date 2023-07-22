@@ -1,6 +1,7 @@
 import bs4
 import logging
 import yaml
+import json
 
 from bs4 import BeautifulSoup
 from aiogram import Bot, Dispatcher, executor, types
@@ -10,32 +11,51 @@ from Grocery_Bot.src.classes import Product
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.firefox.options import Options
+from Grocery_Bot.src.db_functions import create_table, insert_data, connect_to_db, close_connection
 
 
 SHOP_HEADERS_LENGTH = 6
 ONLINE_HEADERS_LENGTH = 5
 EMPTY_SALE_VALUE = ' '
-HEBREW_SALE_VALUE = 'מבצע'
 
 
 class SeleniumKeyMissingException(Exception):
     pass
 
 
+def get_dict_key_by_value(my_dict, value):
+    for key, val in my_dict.items():
+        if val == value:
+            return key
+
+
 def get_config() -> dict[str, str]:
     """
     get configuration from config file
 
-    :return: configuration
+    :return: configuration dictionary
     """
     with open('conf.yml') as f:
         return yaml.load(f, Loader=SafeLoader)
+
+
+def get_translation() -> dict[str, str]:
+    """
+    get translations
+
+    :return: dictionary of translations
+    """
+    with open("src/translation.json", 'r') as f:
+        return json.load(f)
 
 
 config = get_config()
 BOT_TOKEN: str = config['bot_token']
 shopping_area: str = config['shopping_area']
 
+translation = get_translation()
+HEBREW_SALE_VALUE = translation['sale']
+HEBREW_PRODUCT_ID = translation['product_id']
 
 # Configuring logging
 logging.basicConfig(level=logging.INFO)
@@ -84,9 +104,10 @@ def filter_table_content(table, product) -> Product | None:
     Got a product table content from the browser.
 
     :param table: selenium table object
-    :param product: str - product id
+    :param product: Product object
     :return: updated product object with table content or None
     """
+    connection, cursor = connect_to_db()
 
     if table.attrs.get("style") == "display: inline-block":
         product.name = table.find("h3").contents[0].text
@@ -116,6 +137,13 @@ def filter_table_content(table, product) -> Product | None:
     else:
         product.online_shops.keys = headers
         table_type = 'online_shops'
+
+    db_table_headers = headers.copy()
+    db_table_headers.append(HEBREW_PRODUCT_ID)
+    # Convert headers from hebrew to english for database
+    db_table_headers = [get_dict_key_by_value(translation, header) for header in db_table_headers]
+    logger.info(f"create table: {table_type} with headers {db_table_headers}")
+    create_table(connection, table_type, db_table_headers)
 
     # Table Body
     t_body = table.find('tbody')
@@ -153,6 +181,13 @@ def filter_table_content(table, product) -> Product | None:
         else:
             product.online_shops.values = row_content
 
+        db_table_values = row_content.copy()
+        db_table_values.update({HEBREW_PRODUCT_ID: product.id})
+        db_table_values = list(db_table_values.values())
+        logger.info(f"inserting to table {table_type} the values {db_table_values}")
+        insert_data(connection, table_type, db_table_values)
+
+    close_connection(connection)
     return product
 
 

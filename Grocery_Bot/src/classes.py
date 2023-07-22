@@ -100,6 +100,12 @@ class Product:
         return {"name": self.name, "id": self.id, "shops": self.shops, "online_shops": self.online_shops}
 
     def _shops_to_string(self, online=False) -> str:
+        """
+        returns a string representation of the list of products available shops.
+
+        :param online: boolean True if shop is online, otherwise false, by default is false
+        :return: string of shop details.
+        """
         shops_str = ""
         shop_values = getattr(self, f"{'online_' if online else ''}shops").values
         for i, shop in enumerate(shop_values):
@@ -112,8 +118,8 @@ class Product:
     def print_product_details(self):
         return f"product name: {self.name}\n" \
                f"product id:{self.id}\n" \
-               f"shops: \n{self._shops_to_string()}" \
-               f"online_shops: \n{self._shops_to_string(online=True)}"
+               f"shops: \n\n{self._shops_to_string()}" \
+               f"online_shops: \n\n{self._shops_to_string(online=True)}"
 
 
 class WebPage:

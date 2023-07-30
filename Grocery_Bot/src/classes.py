@@ -1,270 +1,204 @@
 import logging
-import bs4
-import os
-import json
-import time
-import sqlite3
-import pandas as pd
 
-from typing import Any
+from bs4.element import Tag
 from bs4 import BeautifulSoup
-from selenium import webdriver
+from Grocery_Bot.conf import CONFIG
+from selenium.webdriver import Firefox
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+
+SHOP_HEADERS_LENGTH = 6
+ONLINE_SHOP_HEADERS_LENGTH = 5
 
 
-class Sqlite:
+class WebPageTable:
 
-    def __init__(self, db_name):
-        self.db = db_name
-        self.conn = sqlite3.connect(self.db)
-        self.cursor = self.conn.cursor()
-
-    def create_table(self, table_name, keys):
-        # Create a table with the specified keys
-        create_table_query = f'''
-            CREATE TABLE IF NOT EXISTS {table_name} (
-                {", ".join(keys)}
-            );
-        '''
-        self.conn.execute(create_table_query)
-
-    def insert_data_to_table(self, table_name, data):
-        # Insert data into the specified table
-        insert_query = f'''
-            INSERT INTO {table_name} VALUES ({", ".join(["?"] * len(data))})
-        '''
-        self.conn.execute(insert_query, data)
-        self.conn.commit()
-
-    def read_table(self, table_name):
-        logger.info(pd.read_sql_query(F"SELECT * FROM {table_name}", self.conn))
-
-
-class Config:
-
-    def __init__(self, config_content: dict[str, str]):
-        self.bot_token = config_content['bot_token']
-        self.website_url: str = config_content['website_url']
-        self.shopping_area = config_content['shopping_area']
-        self.products_ids_file_path: str = config_content['products_ids_file_path']
-        self.products_details_file_path: str = config_content['products_details_file_path']
+    def __init__(self, is_online=False):
+        self.is_online = is_online
+        self.headers: list[str] = []
+        self.values: list[dict[str, str]] = []
 
     def __str__(self):
-        return "config_details: %s" % json.dumps(self.__dict__, indent=4)
-
-
-class Table:
-
-    def __init__(self, name, keys=None, values=None):
-        self.name: str = name
-        self.keys: list[str] | None = keys
-        self._values: list[dict[str, Any]] | None = values
-
-    @property
-    def values(self):
-        return self._values
-
-    @values.setter
-    def values(self, data: dict[str, Any]):
-        if not self._values:
-            self._values = [data]
-        else:
-            self._values.append(data)
-
-    def print_values(self):
-        for value in self._values:
-            print(value)
-
-    def __str__(self):
-        return f"Table: {self.name}\n" \
-               f"Keys: {self.keys}\n" \
-               f"values:\n" \
-               f"{self.print_values()}"
-
-
-class Product:
-    """
-    This class represent product object
-    """
-    def __init__(self, product_id):
-        self.id: str = product_id
-        self.name: str = ""
-        self.shops = Table('shops')
-        self.online_shops = Table('online_shops')
-
-    def __str__(self):
-        return {"name": self.name, "id": self.id, "shops": self.shops, "online_shops": self.online_shops}
-
-    def _shops_to_string(self, online=False) -> str:
-        """
-        returns a string representation of the list of products available shops.
-
-        :param online: boolean True if shop is online, otherwise false, by default is false
-        :return: string of shop details.
-        """
         shops_str = ""
-        shop_values = getattr(self, f"{'online_' if online else ''}shops").values
-        for i, shop in enumerate(shop_values):
+        for i, shop in enumerate(self.values):
             shops_str += f"shop index: {i}\n"
             for key, value in shop.items():
                 shops_str += f"\t{key}: {value}\n"
             shops_str += "\n"
         return shops_str
 
-    def print_product_details(self):
-        return f"product name: {self.name}\n" \
-               f"product id:{self.id}\n" \
-               f"shops: \n\n{self._shops_to_string()}" \
-               f"online_shops: \n\n{self._shops_to_string(online=True)}"
+
+class Product:
+
+    def __init__(self, barcode, name=''):
+        self.barcode: str = barcode
+        self.name: str = name
+        self.shops: WebPageTable = WebPageTable()
+        self.online_shops: WebPageTable = WebPageTable(is_online=True)
+
+    def _add_shop(self, data: dict[str, str]):
+        pass
+
+    def _add_online_shop(self, data: dict[str, str]):
+        pass
+
+    def __str__(self):
+        return f"barcode: {self.barcode}\n" \
+               f"name: {self.name}\n" \
+               f"shops: {self.shops}\n" \
+               f"online_shops: {self.online_shops}\n"
 
 
 class WebPage:
-    """
-    This class represent web page object per product
-    """
 
-    def __init__(self, url: str, headless: bool = False):
-        self.headless = headless
+    def __init__(self, product_id: str, headers: bool = False):
+        self.logger = logging.getLogger(__name__)
         self._options = Options()
-        self.browser = webdriver.Firefox(options=self._options)
-        self.url: str = url
-        self.browser.get(self.url)
+        if headers:
+            self._options.add_argument('--headers')
+        self.driver = Firefox(options=self._options)
+        self.url = 'https://chp.co.il'
+        self.driver.get(self.url)
+        self.product = Product(product_id)
 
-    @property
-    def headless(self):
-        logger.info("Getting headless")
-        return self.headless
-
-    @headless.setter
-    def headless(self, headless):
-        if headless:
-            logger.info('Adding --headless argument to options')
-            self._options.add_argument('--headless')
-            self.browser = webdriver.Firefox(options=self._options)
-
-    def fill_product_filter_field(self, field_type: str, field_name: str, value: str):
-        # Fill the searching field
-        product_indicator = self.browser.find_element(field_type, field_name)
-        product_indicator.send_keys("")
-        time.sleep(1)
-        product_indicator.send_keys(value)
-        time.sleep(1)
-
-    def get_all_tables(self, product_id: str) -> list[bs4.element.Tag]:
+    def setup_filters(self):
         """
-        find all tables in the given browser
-        :return: list of all tables in the given page
-        """
+        Setup filters for product details
 
-        # Fill the searching field
-        self.fill_product_filter_field(By.NAME, "product_name_or_barcode", product_id)
-
-        # Click on the search button
-        self.browser.find_element(By.ID, "get_compare_results_button").click()
-        time.sleep(1)
-
-        table_html = self.browser.page_source
-        soup = BeautifulSoup(table_html, "html.parser")
-        result_div = soup.find("div", {"id": "compare_results"})
-        tables: list[bs4.element.Tag] = [table for table in result_div.find_all("table")]
-
-        return tables
-
-
-class Products:
-
-    def __init__(self, config: Config):
-        self.config: Config = config
-        self.products: dict[str, Product] = {}
-        self.logger = logging.getLogger("Products_class")
-
-    def get_all_product_ids(self) -> None:
-        with open(f"{os.getcwd()}/{self.config.products_ids_file_path}", "r") as f:
-            product_ids = f.read().splitlines()
-
-        self.products: dict[str, Product] = {p_id: Product(p_id) for p_id in product_ids}
-
-    def write_products_to_file(self) -> None:
-        with open(f"{os.getcwd()}/{self.config.products_details_file_path}", "w") as file:
-            json_products = {p_id: v.__str__() for p_id, v in self.products.items()}
-            file.write(json.dumps(json_products))
-
-    def get_all_products(self) -> None:
-        """
-        Get for each product all stores and prices from website chp.co.il.
-        for each product, store the stores and prices in dictionary.
-        The dictionary contains the product name and the list of stores and prices.
         :return: None
         """
+        self._send_filters(By.NAME, "shopping_address", CONFIG.shopping_area)
+        self._send_filters(By.NAME, "product_name_or_barcode", self.product.barcode)
+        self.driver.find_element(By.ID, "get_compare_results_button").click()
 
-        # Clear file
-        products_details_file_full_path = f"{os.getcwd()}/{self.config.products_details_file_path}"
-        with open(products_details_file_full_path, 'w') as file:
-            file.write("")
+    def _send_filters(self, elem_type: By, key: str, value: str) -> None:
+        """
+        Send data to selected element in driver
 
-        self.get_all_product_ids()
+        :param elem_type: By - type of page element
+        :param key: str - indicator of element
+        :param value: str - the value we want to set in element
+        :return: None
+        """
+        element = self.driver.find_element(elem_type, key)
+        element.send_keys(value)
+        self.logger.info("sending %s: %s", key, value)
 
-        web_page = WebPage(self.config.website_url)
-        web_page.fill_product_filter_field(By.NAME, "shopping_address", self.config.shopping_area)
+    def _get_tables_from_web_page(self) -> list[Tag]:
+        """
+        Get all tables from web page
 
-        if not self.products:
-            web_page.browser.quit()
+        :return: list[Tag] - list of web page tables
+        """
+        product_html: str = self.driver.page_source
+        self.logger.info("got product_html: %s", product_html)
+        soup = BeautifulSoup(product_html, "html.parser")
+        result_div = soup.find("div", {"id": "compare_results"})
+        tables: list[Tag] = [table for table in result_div.find_all("table")]
+        self.logger.info("got tables: %s", tables)
+        return tables
 
-        products_ids = list(self.products.keys())
+    def _get_table_headers(self, table: Tag) -> list[str]:
+        """
+        Get table and extract headers from table.
+        The function extracts the headers, store them in product and return them
 
-        for product_id in products_ids:
+        :param table: Tag - table to extract headers
+        :return: table type
+        """
+        # Table headers
+        t_head = table.find('thead')
+        if not t_head:
+            raise KeyError('Expected to find thead key in table: %s' % table)
 
-            tables_list = web_page.get_all_tables(product_id)
+        tr = t_head.find('tr')
+        if not tr:
+            raise KeyError('Expected to find tr key in t_head: %s' % t_head)
 
-            for table in tables_list:
-                if table.attrs.get("style") == "display: inline-block":
-                    self.products[product_id].name = table.find("h3").contents[0].text
+        th = tr.find('th')
+        if not th:
+            raise KeyError('Expected to find th key in tr: %s' % tr)
 
-                # filter non results table
-                if "results-table" not in table.attrs.get("class", ""):
+        headers: list[str] = [th.text for th in tr if type(th) == Tag]
+        self.logger.info('Got headers: %s' % headers)
+        if len(headers) == SHOP_HEADERS_LENGTH:
+            self.product.shops.headers = headers
+        else:
+            self.product.online_shops.headers = headers
+        return headers
+
+    def _filter_body_content(self, table: Tag, table_type: str) -> None:
+        """
+        Got body content of table and extract the relevant data of the product
+
+        :param table: Tag - table to product content
+        :param table_type: str - online_shops / shops
+        :return: None
+        """
+        # Table Body
+        t_body = table.find('tbody')
+        if not t_body:
+            raise KeyError('Expected to find tbody key in table')
+
+        tr_list = t_body.find_all('tr')
+        if not tr_list:
+            raise KeyError('Expected to find at least one tr in t_body: %s' % t_body)
+
+        body_content = [tr for tr in tr_list if 'display_when_narrow' not in tr.attrs.get('class', '')]
+        self.logger.info(f"got body: {body_content}")
+
+        headers = getattr(self.product, table_type).headers
+
+        for row_index, tr in enumerate(body_content):
+
+            row_content = {}
+            td_list = tr.find_all('td')
+            if not td_list:
+                continue
+
+            for td_index, td in enumerate(td_list):
+
+                if headers[td_index] != CONFIG.translation.get('sale'):
+                    row_content[headers[td_index]] = td.text
                     continue
 
-                # Table headers
-                headers = [th.text for th in table.find("thead").find("tr").find_all("th")]
-                self.logger.info(f"got headers: {headers}")
+                try:
+                    if td.next.get("type") == "button":
+                        row_content[headers[td_index]] = td.next.get("data-discount-desc").replace("<BR>", " ")
+                except AttributeError:
+                    row_content[headers[td_index]] = td.text if td.string != '\xa0' else ''
 
-                # Table Body
-                body_content = [tr for tr in table.find("tbody").find_all("tr")
-                                if "display_when_narrow" not in tr.attrs.get("class", "")]
-                self.logger.info(f"got body: {body_content}")
+            if table_type == 'shops':
+                self.product.shops.values.append(row_content)
+            else:
+                self.product.online_shops.values.append(row_content)
 
-                table_json = {}
-                for row_index, tr in enumerate(body_content):
-                    row_content = {}
-                    for td_index, td in enumerate(tr.find_all("td")):
+    def _filter_table_content(self, table: Tag) -> None:
+        """
+        filter table content and update product
 
-                        if headers[td_index] != "מבצע":
-                            row_content[headers[td_index]] = td.text
-                            continue
+        :param table: Tag - shop/online_shop table
+        :return: None - update product object
+        """
+        if table.attrs.get("style") == "display: inline-block":
+            self.product.name = table.find("h3").contents[0].text
 
-                        try:
-                            if td.next.get("type") == "button":
-                                row_content[headers[td_index]] = td.next["data-discount-desc"]
-                        except AttributeError:
-                            row_content[headers[td_index]] = td.text
+            # filter non results table
+        if "results-table" not in table.attrs.get("class", ""):
+            return
 
-                    table_json[row_index] = row_content
+        table_headers = self._get_table_headers(table)
+        table_type = 'shops' if len(table_headers) == SHOP_HEADERS_LENGTH else 'online_shops'
+        self._filter_body_content(table, table_type)
 
-                setattr(self.products[product_id], "{}shops".format("online_" if len(headers) == 5 else ""), table_json)
+    def collect_product_data(self):
+        """
+        Collect product data from driver
 
-            self.logger.info(f"adding {self.products[product_id].name} to products.\n"
-                             f"product details:\n{self.products[product_id].__str__()}")
-        try:
-            json_products = {p_id: v.__str__() for p_id, v in self.products.items()}
-            logger.info(f"products: {json.dumps(json_products)}")
+        :return: Product object
+        """
+        tables = self._get_tables_from_web_page()
 
-            self.write_products_to_file()
-        except Exception as e:
-            logger.info(e)
-            pass
-
-        web_page.browser.quit()
+        for table in tables:
+            self._filter_table_content(table)

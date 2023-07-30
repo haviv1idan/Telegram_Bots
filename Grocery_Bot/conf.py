@@ -35,6 +35,18 @@ def get_translation() -> dict[str, str]:
         return translation
 
 
+def get_all_products_from_file():
+    """
+    get all products from products.txt
+
+    :return: list of products barcodes
+    """
+    with open("additional_files/products.txt", 'r') as f:
+        barcodes = f.read().split('\n')
+        logger.info("barcodes: \n%s" % barcodes)
+        return barcodes
+
+
 class Config:
 
     def __init__(self):
@@ -43,6 +55,7 @@ class Config:
         self.bot: Bot = Bot(token=self.config_file.get('bot_token'))
         self.dispatcher: Dispatcher = Dispatcher(self.bot)
         self.translation = get_translation()
+        self.barcodes: list[str] = get_all_products_from_file()
 
 
 CONFIG = Config()

@@ -46,8 +46,8 @@ class Product:
     def __str__(self):
         return f"barcode: {self.barcode}\n" \
                f"name: {self.name}\n" \
-               f"shops: {self.shops}\n" \
-               f"online_shops: {self.online_shops}\n"
+               f"shops: \n{self.shops}\n" \
+               f"online_shops: \n{self.online_shops}\n"
 
 
 class WebPage:

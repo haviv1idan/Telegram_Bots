@@ -1,9 +1,7 @@
-from time import sleep
 from aiogram import types
 from logging import getLogger
-from Grocery_Bot.conf import BOT, DISPATCHER
+from Grocery_Bot.conf import BOT, DISPATCHER, CONFIG
 from Grocery_Bot.src.classes import WebPage
-from selenium.webdriver.common.by import By
 
 bot, dp = BOT, DISPATCHER
 
@@ -31,3 +29,17 @@ async def product_details(message: types.Message):
         web_page.driver.quit()
     web_page.driver.quit()
     await message.reply(web_page.product)
+
+
+@dp.message_handler(commands=['all_products'])
+async def product_details(message: types.Message):
+    for product in CONFIG.barcodes:
+        logger.info(f"product: {product}")
+        web_page = WebPage(product, headers=True)
+        web_page.setup_filters()
+        try:
+            web_page.collect_product_data()
+        except Exception as e:
+            web_page.driver.quit()
+        web_page.driver.quit()
+        await message.reply(web_page.product)

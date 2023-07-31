@@ -6,10 +6,16 @@ from Grocery_Bot.conf import CONFIG
 from selenium.webdriver import Firefox
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
-from Grocery_Bot.src.db_functions import connect_to_db, insert_data, create_table
+from Grocery_Bot.src.db_functions import connect_to_db, insert_data, create_table, delete_product
 
 SHOP_HEADERS_LENGTH = 6
 ONLINE_SHOP_HEADERS_LENGTH = 5
+
+
+def get_dict_key_by_value(my_dict, value):
+    for key, val in my_dict.items():
+        if val == value:
+            return key
 
 
 class WebPageTable:
@@ -41,8 +47,10 @@ class Product:
         if not (self.online_shops.headers and self.online_shops.values):
             return
 
+        delete_product(conn, 'shops', self.barcode)
         db_table_headers = self.shops.headers.copy()
-        db_table_headers.append('ברקוד')
+        db_table_headers.append('מקט')
+        db_table_headers = [get_dict_key_by_value(CONFIG.translation, header) for header in db_table_headers]
         create_table(conn, 'shops', db_table_headers)
         for shop in self.shops.values:
             values = list(shop.values())
@@ -53,8 +61,10 @@ class Product:
         if not (self.online_shops.headers and self.online_shops.values):
             return
 
+        delete_product(conn, 'online_shops', self.barcode)
         db_table_headers = self.online_shops.headers.copy()
-        db_table_headers.append('ברקוד')
+        db_table_headers.append('מקט')
+        db_table_headers = [get_dict_key_by_value(CONFIG.translation, header) for header in db_table_headers]
         create_table(conn, 'online_shops', db_table_headers)
         for online_shop in self.online_shops.values:
             values = list(online_shop.values())
@@ -80,7 +90,7 @@ class WebPage:
         self.logger = logging.getLogger(__name__)
         self._options = Options()
         if headers:
-            self._options.add_argument('--headers')
+            self._options.add_argument('--headless')
         self.driver = Firefox(options=self._options)
         self.url = 'https://chp.co.il'
         self.driver.get(self.url)

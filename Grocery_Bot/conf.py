@@ -54,7 +54,7 @@ class Config:
         self.shopping_area = self.config_file.get('shopping_area')
         self.bot: Bot = Bot(token=self.config_file.get('bot_token'))
         self.dispatcher: Dispatcher = Dispatcher(self.bot)
-        self.translation = get_translation()
+        self.translation: dict[str, str] = get_translation()
         self.barcodes: list[str] = get_all_products_from_file()
 
 

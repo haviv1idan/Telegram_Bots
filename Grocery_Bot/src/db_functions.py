@@ -1,6 +1,6 @@
 import sqlite3
-
 import pandas as pd
+from Grocery_Bot.conf import CONFIG
 
 DB_PATH = 'products_database.db'
 
@@ -43,19 +43,25 @@ def insert_data(conn, table_name: str, data: list[str]) -> None:
     conn.commit()
 
 
-# def check_if_data_already_exist(conn, table_name: str, data: dict[str, str]):
-#     """
-#     Check if the specified table contains the specified data
-#
-#     :param conn: connection to the database
-#     :param table_name: str - name of the table
-#     :param data: dict of col name and data
-#     :return: None, if all data is existed in table. otherwise, replace data
-#     """
-#     df = pd.read_sql_query(f'SELECT * FROM {table_name}', conn)
-#     product_id = data[HEBREW_PRODUCT_ID]
-#     df_filtered_by_product_id = df[df[HEBREW_PRODUCT_ID] == product_id]
-#     for key, value in data.items():
-#         if key == HEBREW_PRODUCT_ID:
-#             continue
-#         pass
+def delete_product(conn, table_name: str, product_id: str) -> None:
+    delete_query = f"DELETE FROM {table_name} WHERE barcode = '{product_id}'"
+    conn.execute(delete_query)
+    conn.commit()
+
+
+def swap_dict_keys(dictionary, key_mapping):
+    """
+    Swaps the keys of a dictionary with new keys according to the provided mapping.
+
+    Parameters:
+        dictionary (dict): The original dictionary.
+        key_mapping (dict): A dictionary containing the mapping of old keys to new keys.
+
+    Returns:
+        dict: The modified dictionary with swapped keys.
+    """
+    swapped_dict = {}
+    for old_key, new_key in key_mapping.items():
+        if old_key in dictionary:
+            swapped_dict[new_key] = dictionary[old_key]
+    return swapped_dict

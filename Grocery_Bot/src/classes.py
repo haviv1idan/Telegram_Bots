@@ -6,7 +6,7 @@ from Grocery_Bot.conf import CONFIG
 from selenium.webdriver import Firefox
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
-
+from Grocery_Bot.src.db_functions import connect_to_db, insert_data, create_table
 
 SHOP_HEADERS_LENGTH = 6
 ONLINE_SHOP_HEADERS_LENGTH = 5
@@ -37,11 +37,35 @@ class Product:
         self.shops: WebPageTable = WebPageTable()
         self.online_shops: WebPageTable = WebPageTable(is_online=True)
 
-    def _add_shop(self, data: dict[str, str]):
-        pass
+    def _insert_shops(self, conn):
+        if not (self.online_shops.headers and self.online_shops.values):
+            return
 
-    def _add_online_shop(self, data: dict[str, str]):
-        pass
+        db_table_headers = self.shops.headers.copy()
+        db_table_headers.append('ברקוד')
+        create_table(conn, 'shops', db_table_headers)
+        for shop in self.shops.values:
+            values = list(shop.values())
+            values.append(self.barcode)
+            insert_data(conn, 'shops', values)
+
+    def _insert_online_shops(self, conn):
+        if not (self.online_shops.headers and self.online_shops.values):
+            return
+
+        db_table_headers = self.online_shops.headers.copy()
+        db_table_headers.append('ברקוד')
+        create_table(conn, 'online_shops', db_table_headers)
+        for online_shop in self.online_shops.values:
+            values = list(online_shop.values())
+            values.append(self.barcode)
+            insert_data(conn, 'online_shops', values)
+
+    def insert_data_to_db(self):
+        conn, cursor = connect_to_db()
+        self._insert_shops(conn)
+        self._insert_online_shops(conn)
+        conn.close()
 
     def __str__(self):
         return f"barcode: {self.barcode}\n" \
@@ -124,8 +148,10 @@ class WebPage:
         self.logger.info('Got headers: %s' % headers)
         if len(headers) == SHOP_HEADERS_LENGTH:
             self.product.shops.headers = headers
+            self.logger.info(f"shops headers: %s" % self.product.shops.headers)
         else:
             self.product.online_shops.headers = headers
+            self.logger.info(f"shops headers: %s" % self.product.shops.headers)
         return headers
 
     def _filter_body_content(self, table: Tag, table_type: str) -> None:

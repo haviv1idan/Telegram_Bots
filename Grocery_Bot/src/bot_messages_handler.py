@@ -28,6 +28,7 @@ async def product_details(message: types.Message):
     except Exception as e:
         web_page.driver.quit()
     web_page.driver.quit()
+    web_page.product.insert_data_to_db()
     await message.reply(web_page.product)
 
 
@@ -42,4 +43,5 @@ async def product_details(message: types.Message):
         except Exception as e:
             web_page.driver.quit()
         web_page.driver.quit()
+        web_page.product.insert_data_to_db()
         await message.reply(web_page.product)

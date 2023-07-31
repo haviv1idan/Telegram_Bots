@@ -16,7 +16,15 @@ def close_connection(connection):
     connection.close()
 
 
-def create_table(conn, table_name, keys):
+def create_table(conn, table_name: str, keys: list[str]) -> None:
+    """
+    Create a new table in the database if not already existing
+
+    :param conn: database connection
+    :param table_name: str - name of the table
+    :param keys: list of strings - table columns
+    :return: None
+    """
     # Create a table with the specified keys
     create_table_query = f'''
         CREATE TABLE IF NOT EXISTS {table_name} (
@@ -26,7 +34,7 @@ def create_table(conn, table_name, keys):
     conn.execute(create_table_query)
 
 
-def insert_data(conn, table_name, data):
+def insert_data(conn, table_name: str, data: list[str]) -> None:
     # Insert data into the specified table
     insert_query = f'''
         INSERT INTO {table_name} VALUES ({", ".join(["?"] * len(data))})

@@ -56,6 +56,8 @@ async def product_details(message: types.Message):
     logger.info(f"Got product: {product_id}")
     product = get_product_data(product_id)
     await message.reply(product.__str__())
+    if product not in CONFIG.barcodes:
+        CONFIG.update_barcodes(product_id)
 
 
 @dp.message_handler(commands=['all_products'])
@@ -63,4 +65,5 @@ async def product_details(message: types.Message):
     threads_results = run_get_product_data_as_thread(CONFIG.barcodes)
 
     for product_id in CONFIG.barcodes:
-        await message.reply(threads_results[product_id].__str__())
+        if threads_results.get(product_id):
+            await message.reply(threads_results[product_id].__str__())

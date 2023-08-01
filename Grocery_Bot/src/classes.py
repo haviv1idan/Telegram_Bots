@@ -8,8 +8,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 from Grocery_Bot.src.db_functions import connect_to_db, insert_data, create_table, delete_product
 
-SHOP_HEADERS_LENGTH = 6
-ONLINE_SHOP_HEADERS_LENGTH = 5
+SHOP_INDICATOR = 'כתובת החנות'
+ONLINE_SHOP_INDICATOR = 'אתר אינטרנט'
 
 
 def get_dict_key_by_value(my_dict, value):
@@ -156,7 +156,7 @@ class WebPage:
 
         headers: list[str] = [th.text for th in tr if type(th) == Tag]
         self.logger.info('Got headers: %s' % headers)
-        if len(headers) == SHOP_HEADERS_LENGTH:
+        if SHOP_INDICATOR in headers:
             self.product.shops.headers = headers
             self.logger.info(f"shops headers: %s" % self.product.shops.headers)
         else:
@@ -225,7 +225,7 @@ class WebPage:
             return
 
         table_headers = self._get_table_headers(table)
-        table_type = 'shops' if len(table_headers) == SHOP_HEADERS_LENGTH else 'online_shops'
+        table_type = 'shops' if SHOP_INDICATOR in table_headers else 'online_shops'
         self._filter_body_content(table, table_type)
 
     def collect_product_data(self):

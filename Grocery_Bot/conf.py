@@ -57,6 +57,11 @@ class Config:
         self.translation: dict[str, str] = get_translation()
         self.barcodes: list[str] = get_all_products_from_file()
 
+    def update_barcodes(self, barcode):
+        self.barcodes.append(barcode)
+        with open("additional_files/products.txt", 'w') as f:
+            f.write('\n'.join(self.barcodes))
+
 
 CONFIG = Config()
 BOT = CONFIG.bot

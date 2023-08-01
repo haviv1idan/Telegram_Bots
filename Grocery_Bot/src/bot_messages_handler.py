@@ -53,11 +53,14 @@ async def send_welcome(message: types.Message):
 @dp.message_handler(commands=['product'])
 async def product_details(message: types.Message):
     product_id = message.text.split(' ')[-1]
-    logger.info(f"Got product: {product_id}")
-    product = get_product_data(product_id)
-    await message.reply(product.__str__())
-    if product not in CONFIG.barcodes:
-        CONFIG.update_barcodes(product_id)
+    if product_id == '/product':
+        await message.reply("No product entered")
+    else:
+        logger.info(f"Got product: {product_id}")
+        product = get_product_data(product_id)
+        await message.reply(product.__str__())
+        if product not in CONFIG.barcodes:
+            CONFIG.update_barcodes(product_id)
 
 
 @dp.message_handler(commands=['all_products'])

@@ -28,7 +28,7 @@ class WebPageTable:
     def __str__(self):
         shops_str = ""
         for i, shop in enumerate(self.values):
-            shops_str += f"shop index: {i}\n"
+            shops_str += f"\tshop index: {i}\n"
             for key, value in shop.items():
                 shops_str += f"\t{key}: {value}\n"
             shops_str += "\n"

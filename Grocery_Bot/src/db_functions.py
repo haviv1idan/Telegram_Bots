@@ -1,8 +1,15 @@
 import sqlite3
-import pandas as pd
-from Grocery_Bot.conf import CONFIG
+
 
 DB_PATH = 'products_database.db'
+
+__all__ = (
+    'connect_to_db',
+    'create_table',
+    'insert_data',
+    'delete_product',
+    'swap_dict_keys',
+)
 
 
 def connect_to_db():
@@ -10,10 +17,6 @@ def connect_to_db():
     cursor = connection.cursor()
 
     return connection, cursor
-
-
-def close_connection(connection):
-    connection.close()
 
 
 def create_table(conn, table_name: str, keys: list[str]) -> None:

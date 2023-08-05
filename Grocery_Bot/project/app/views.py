@@ -1,8 +1,8 @@
 # myapp/views.py
 
 from rest_framework import generics
-from .models import Product, Shop
-from .serializers import ProductSerializer, ShopSerializer
+from .models import Product, Shop, OnlineShop
+from .serializers import ProductSerializer, ShopSerializer, OnlineShopSerializer
 
 
 class ProductGetView(generics.ListAPIView):
@@ -43,3 +43,23 @@ class ShopUpdateView(generics.UpdateAPIView):
 class ShopDeleteView(generics.DestroyAPIView):
     queryset = Shop.objects.all()
     serializer_class = ShopSerializer
+
+
+class OnlineShopGetView(generics.ListAPIView):
+    queryset = OnlineShop.objects.all()
+    serializer_class = OnlineShopSerializer
+
+
+class OnlineShopCreateView(generics.CreateAPIView):
+    queryset = OnlineShop.objects.all()
+    serializer_class = OnlineShopSerializer
+
+
+class OnlineShopUpdateView(generics.UpdateAPIView):
+    queryset = OnlineShop.objects.all()
+    serializer_class = OnlineShopSerializer
+
+
+class OnlineShopDeleteView(generics.DestroyAPIView):
+    queryset = OnlineShop.objects.all()
+    serializer_class = OnlineShopSerializer

@@ -1,7 +1,7 @@
 # myapp/serializers.py
 
 from rest_framework import serializers
-from .models import Product, Shop
+from .models import Product, Shop, OnlineShop
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -15,3 +15,8 @@ class ShopSerializer(serializers.ModelSerializer):
         model = Shop
         fields = '__all__'
 
+
+class OnlineShopSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OnlineShop
+        fields = '__all__'

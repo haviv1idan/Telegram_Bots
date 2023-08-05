@@ -16,4 +16,10 @@ urlpatterns = [
     path('shop/create/', ShopCreateView.as_view(), name='Shop-create'),
     path('shop/update/<int:pk>/', ShopUpdateView.as_view(), name='Shop-update'),
     path('shop/delete/<int:pk>/', ShopDeleteView.as_view(), name='Shop-delete'),
+
+    # OnlineShop api
+    path('OnlineShop/get/', ShopGetView.as_view(), name='OnlineShop-get'),
+    path('OnlineShop/create/', ShopCreateView.as_view(), name='OnlineShop-create'),
+    path('OnlineShop/update/<int:pk>/', ShopUpdateView.as_view(), name='OnlineShop-update'),
+    path('OnlineShop/delete/<int:pk>/', ShopDeleteView.as_view(), name='OnlineShop-delete'),
 ]

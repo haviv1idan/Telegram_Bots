@@ -25,6 +25,9 @@ class WebPageTable:
         self.headers: list[str] = []
         self.values: list[dict[str, str]] = []
 
+    def __dict__(self):
+        return {str(i): dict(shop.items()) for i, shop in enumerate(self.values)}
+
     def __str__(self):
         shops_str = ""
         for i, shop in enumerate(self.values):
@@ -76,6 +79,12 @@ class Product:
         self._insert_shops(conn)
         self._insert_online_shops(conn)
         conn.close()
+
+    def __dict__(self):
+        return {'barcode': self.barcode,
+                'name': self.name,
+                'shops': self.shops.__dict__(),
+                'online_shops': self.online_shops.__dict__()}
 
     def __str__(self):
         return f"barcode: {self.barcode}\n" \

@@ -11,3 +11,5 @@ Grocery_Bot/additional_files/*
 *.log*
 *.db*
 *.yml*
+
+*.DS_Store*

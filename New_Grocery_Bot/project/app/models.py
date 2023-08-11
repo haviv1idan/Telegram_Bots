@@ -19,9 +19,9 @@ class User(models.Model):
 class Message(models.Model):
     id = models.IntegerField(primary_key=True)
     text = models.CharField(max_length=100)
-    unix_time = models.DateTimeField(max_length=20)
+    unix_time = models.DateTimeField()
     is_bot = models.BooleanField(default=False)
-    user_id = models.IntegerField(null=True)
+    user_id = models.CharField(max_length=20, null=True)
 
     def __str__(self) -> str:
         return f"username: {self.id}\n" \

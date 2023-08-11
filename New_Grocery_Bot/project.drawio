@@ -1,23 +1,29 @@
 <mxfile host="65bd71144e">
     <diagram id="vLtd_LdF3qCDUaCL9kJM" name="Page-1">
-        <mxGraphModel dx="810" dy="626" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="810" dy="324" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="2" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="3" target="5">
+                <mxCell id="2" value="" style="edgeStyle=none;html=1;" parent="1" source="3" target="5" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="3" value="&lt;u&gt;Product:&lt;/u&gt;&lt;br&gt;barcode&lt;br&gt;name" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="3" value="&lt;u&gt;Product:&lt;/u&gt;&lt;br&gt;barcode&lt;br&gt;name" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="40" y="130" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="4" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="5" target="6">
+                <mxCell id="4" value="" style="edgeStyle=none;html=1;" parent="1" source="5" target="6" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="5" value="&lt;u&gt;Shop&lt;/u&gt;&lt;br&gt;chain&lt;br&gt;store_name&lt;br&gt;address&lt;br&gt;distance&lt;br&gt;sale&lt;br&gt;price&lt;br&gt;barcode" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="5" value="&lt;u&gt;Shop&lt;/u&gt;&lt;br&gt;chain&lt;br&gt;store_name&lt;br&gt;address&lt;br&gt;distance&lt;br&gt;sale&lt;br&gt;price&lt;br&gt;barcode" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="240" y="80" width="120" height="160" as="geometry"/>
                 </mxCell>
-                <mxCell id="6" value="&lt;u&gt;Online_Shop&lt;/u&gt;&lt;br&gt;chain&lt;br&gt;store_name&lt;br&gt;website&lt;br&gt;sale&lt;br&gt;price&lt;br&gt;barcode" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="6" value="&lt;u&gt;Online_Shop&lt;/u&gt;&lt;br&gt;chain&lt;br&gt;store_name&lt;br&gt;website&lt;br&gt;sale&lt;br&gt;price&lt;br&gt;barcode" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="440" y="80" width="120" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="&lt;u&gt;Users:&lt;/u&gt;&lt;br&gt;id&lt;br&gt;name&lt;br&gt;first name&lt;br&gt;last name&lt;br&gt;language cod&lt;br&gt;" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="280" width="120" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" value="&lt;u&gt;Message:&lt;/u&gt;&lt;br&gt;id&lt;br&gt;text&lt;br&gt;unix time&lt;br&gt;is bot&lt;br&gt;user id" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="240" y="280" width="120" height="120" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
